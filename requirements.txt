@@ -3,7 +3,5 @@ gspread
 oauth2client
 pandas
 matplotlib
-plotly
-streamlit
 fpdf
 numpy
