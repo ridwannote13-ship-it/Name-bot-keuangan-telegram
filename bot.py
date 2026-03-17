@@ -2,20 +2,25 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
+import os
+import json
 
 scope = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    "service_account.json", scope)
+# ===== AMBIL GOOGLE JSON DARI RAILWAY ENV =====
+google_json = os.getenv("GOOGLE_JSON")
+creds_dict = json.loads(google_json)
+
+creds = ServiceAccountCredentials.from_json_keyfile_dict(
+    creds_dict, scope)
 
 client = gspread.authorize(creds)
 sheet = client.open("Laporan Keuangan Bot").sheet1
 
 
-# ===== COMMAND VERSION =====
 async def masuk(update, context):
     nominal = context.args[0]
     ket = " ".join(context.args[1:])
@@ -34,7 +39,6 @@ async def keluar(update, context):
     await update.message.reply_text("✅ Pengeluaran tersimpan")
 
 
-# ===== CHAT VERSION TANPA GARIS MIRING =====
 async def text_handler(update, context):
     text = update.message.text.lower().split()
 
@@ -74,11 +78,13 @@ async def text_handler(update, context):
         await update.message.reply_text(f"💰 Saldo sekarang: Rp {saldo}")
 
 
-app = ApplicationBuilder().token("8798350375:AAF4nLZjzDRDa7jKVvAGhyP4kq98_gkrE-U").build()
+# ===== TOKEN DARI RAILWAY =====
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+
+app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("masuk", masuk))
 app.add_handler(CommandHandler("keluar", keluar))
-
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
 app.run_polling()
